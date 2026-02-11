@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eye Hospital Patient Flow Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f4f7fb;
+        color: #1c2a39;
+      }
+      header {
+        background: #0d47a1;
+        color: white;
+        padding: 16px 20px;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        padding: 20px;
+      }
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .metric {
+        font-size: 30px;
+        font-weight: bold;
+        margin-top: 4px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        border-bottom: 1px solid #e8eef5;
+        padding: 8px;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      form {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      input,
+      select,
+      button {
+        padding: 8px;
+        border: 1px solid #ccd5e1;
+        border-radius: 6px;
+      }
+      button {
+        background: #0d47a1;
+        color: white;
+        border: none;
+      }
+      .small {
+        color: #5f7388;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>👁 Smart Eye Hospital Patient Flow Dashboard</h1>
+      <p class="small">Live queue, stage progression, and resource utilization.</p>
+    </header>
+
+    <section class="grid" id="metrics"></section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Register New Patient</h3>
+        <form id="patientForm">
+          <input required name="name" placeholder="Patient name" />
+          <input required name="age" min="1" type="number" placeholder="Age" />
+          <select name="priority">
+            <option>Regular</option>
+            <option>Elderly</option>
+            <option>Emergency</option>
+          </select>
+          <button type="submit">Add</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Stage Distribution</h3>
+        <canvas id="stageChart" height="110"></canvas>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card" style="grid-column: 1 / -1">
+        <h3>Patient Queue</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Priority</th>
+              <th>Stage</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="patientRows"></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1">
+        <h3>Resource Monitoring</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Utilization</th>
+            </tr>
+          </thead>
+          <tbody id="resourceRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <script>
+      const metricsElement = document.getElementById('metrics');
+      const patientRows = document.getElementById('patientRows');
+      const resourceRows = document.getElementById('resourceRows');
+      let stageChart;
+
+      function metricCard(label, value) {
+        return `<div class="card"><div>${label}</div><div class="metric">${value}</div></div>`;
+      }
+
+      async function loadDashboard() {
+        const [patientsRes, resourcesRes, metricsRes] = await Promise.all([
+          fetch('/api/patients'),
+          fetch('/api/resources'),
+          fetch('/api/metrics')
+        ]);
+
+        const patients = await patientsRes.json();
+        const resources = await resourcesRes.json();
+        const metrics = await metricsRes.json();
+
+        metricsElement.innerHTML = [
+          metricCard('Waiting', metrics.queue.waiting),
+          metricCard('In Test', metrics.queue.inTest),
+          metricCard('With Doctor', metrics.queue.withDoctor),
+          metricCard('Completed', metrics.queue.completed),
+          metricCard('Avg Resource Utilization', `${metrics.avgUtilization}%`)
+        ].join('');
+
+        patientRows.innerHTML = patients
+          .map(
+            (patient) => `<tr>
+          <td>${patient.token}</td>
+          <td>${patient.name}</td>
+          <td>${patient.age}</td>
+          <td>${patient.priority}</td>
+          <td>${patient.stage}</td>
+          <td>${patient.status}</td>
+        </tr>`
+          )
+          .join('');
+
+        resourceRows.innerHTML = resources
+          .map(
+            (resource) => `<tr>
+            <td>${resource.type}</td>
+            <td>${resource.name}</td>
+            <td>${resource.status}</td>
+            <td>${resource.utilization}%</td>
+          </tr>`
+          )
+          .join('');
+
+        const labels = metrics.byStage.map((x) => x.stage);
+        const data = metrics.byStage.map((x) => x.count);
+
+        if (stageChart) stageChart.destroy();
+        stageChart = new Chart(document.getElementById('stageChart'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Patients',
+                data,
+                backgroundColor: '#42a5f5'
+              }
+            ]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { precision: 0 }
+              }
+            }
+          }
+        });
+      }
+
+      document.getElementById('patientForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const payload = Object.fromEntries(formData.entries());
+
+        const response = await fetch('/api/patients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          event.target.reset();
+          loadDashboard();
+        }
+      });
+
+      loadDashboard();
+      setInterval(loadDashboard, 15000);
+    </script>
+  </body>
+</html>

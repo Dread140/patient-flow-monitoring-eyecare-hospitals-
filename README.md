@@ -1,146 +1,75 @@
-# patient-flow-monitoring-eyecare-hospitals-
 # 👁 Smart Eye Hospital Patient Flow Management System
+
+A working prototype for monitoring outpatient (OPD) patient movement in eye hospitals.
 
 ## 📌 Problem Statement
 
-Eye hospitals experience high outpatient (OPD) volumes and workflow bottlenecks due to:
+Eye hospitals often face high OPD volumes and bottlenecks across multiple stages:
 
-- Multiple diagnostic stages (Vision Test → Imaging → Consultation)
-- Limited ophthalmologists
-- Expensive diagnostic equipment (OCT, Fundus Camera, Slit Lamp)
-- No real-time visibility of patient flow
+- Vision Test → Imaging → Consultation → Treatment
+- Limited ophthalmologists and diagnostic equipment (OCT, Fundus Camera, Slit Lamp)
+- No real-time visibility for queue and resource management
 
-This results in:
-- Long waiting times
-- Specialist overload
-- Equipment under/over-utilization
-- Patient dissatisfaction
+This contributes to long wait times, specialist overload, and inconsistent equipment usage.
 
+## 💡 What this prototype includes
 
+This repository now contains a runnable **Node.js + SQLite + dashboard** implementation with:
 
-## 💡 Solution Overview
+- Real-time patient queue tracking (status + stage)
+- Digital token-based patient registration
+- Stage-wise metrics and queue summary
+- Resource monitoring (doctor/equipment status + utilization)
+- Dashboard visualizations using Chart.js
 
-A real-time digital platform designed specifically for eye hospitals to monitor patient movement, optimize resource allocation, and prevent overcrowding before it happens.
+## 🛠 Tech Stack
 
-The system provides live visibility across:
+- Backend: Node.js + Express
+- Database: SQLite
+- Frontend: HTML/CSS/JS dashboard
+- Visualization: Chart.js
 
-Patient → Vision Test → Imaging → Doctor → Treatment
+## 📁 Project Structure
 
+- `src/server.js` — Express server and REST API
+- `src/db.js` — SQLite schema, seed data, and data access
+- `public/index.html` — live dashboard UI
+- `data/patient-flow.db` — SQLite DB file (created at runtime)
 
-## 🚀 Key Features
+## 🚀 Run Locally
 
-### 1️⃣ Real-Time Patient Flow Tracking
-- Live patient status (Waiting / In Test / With Doctor / Completed)
-- Stage-wise tracking
-- Queue position monitoring
-- Delay alerts for bottlenecks
+1. Install dependencies:
 
-### 2️⃣ OPD Queue Management
-- Digital token generation
-- Automated prioritization (Emergency / Elderly)
-- Estimated waiting time calculation
-- Dynamic queue reallocation
+```bash
+npm install
+```
 
-### 3️⃣ Resource Monitoring
-- Doctor availability tracking
-- Diagnostic equipment status monitoring
-- Room/chair occupancy tracking
-- Smart redistribution suggestions
+2. Start the server:
 
-### 4️⃣ Live Dashboard & Heatmap
-- Department-wise congestion visualization
-- Patient load graphs
-- Equipment utilization charts
-- Real-time alerts
+```bash
+npm start
+```
 
-### 5️⃣ Analytics & Reporting
-- Average waiting time reports
-- Equipment usage analytics
-- Patient throughput metrics
-- Daily/weekly performance insights
+3. Open:
 
+```text
+http://localhost:3000
+```
 
+## 🔌 API Endpoints
 
-## 🏗 System Architecture
+- `GET /api/health` — service health
+- `GET /api/patients` — list patients
+- `POST /api/patients` — create patient `{ name, age, priority }`
+- `PATCH /api/patients/:id` — update patient stage/status
+- `GET /api/resources` — list doctors/equipment
+- `GET /api/metrics` — dashboard metrics
 
-Patient / Staff Interface  
-↓  
-Data Collection Layer  
-↓  
-Central Processing Engine  
-↓  
-Decision & Alert Engine  
-↓  
-Dashboard & Admin View  
+## 🧪 Sample Workflow
 
-
-
-## 🛠 Technology Stack
-
-Frontend:
-- React.js
-
-Backend:
-- Node.js 
-
-Database:
-- SQlite
-
-
-Visualization:
-- Chart.js 
-
-Deployment:
-- Cloud-based architecture
-
-
-
-## 📊 Expected Impact
-
-- Waiting Time Reduced by ~30%
-- Equipment Idle Time Reduced by ~25%
-- Patient Throughput Increased by ~20%
-- Improved Ophthalmologist Efficiency
-
-
-## 🔬 Innovation Edge
-
-- Designed specifically for eye hospital workflows
-- Equipment-level tracking (OCT, Fundus Camera, Slit Lamp)
-- Protects specialist time
-- Prevents overcrowding before escalation
-- Low-cost, scalable implementation
-- No additional hardware required
-
-Unlike generic hospital management systems, this solution is ophthalmology-focused and workflow-specific.
-
-
-## ⚙ Prototype Status
-
-- UI dashboard mockups completed
-- Workflow architecture finalized
-- Real-time flow logic designed
-- Pilot-ready system model
-
-
-## ⚠ Risks & Mitigation
-
-| Risk | Mitigation |
-|------|------------|
-| Staff resistance | Training & onboarding |
-| Data entry errors | Partial automation |
-| System downtime | Cloud backup |
-| Data privacy concerns | Role-based secure access |
-
-
-## 👥 Team
-
-Project Lead – System Architecture & Workflow Design  
-Frontend Developer – Dashboard & UI Development  
-Backend Developer – Data Logic & Analytics Engine  
-
-“Our team combines system design, UI development, and backend analytics expertise to deliver a complete and scalable eye-care workflow solution.”
-
+- Register patients from the dashboard form.
+- See queue counters and stage chart update.
+- Monitor doctor and equipment utilization in real time.
 
 ## 🔮 Future Scope
 
@@ -150,12 +79,6 @@ Backend Developer – Data Logic & Analytics Engine
 - Doctor mobile app
 - Automated appointment optimization
 
+## 📌 Hackathon Focus
 
-## 🎯 Final Goal
-
-To transform eye hospitals into intelligent, data-driven, patient-friendly care systems that reduce waiting time, optimize specialist usage, and improve overall clinical efficiency.
-
-
-## 📌 Hackathon Project
-
-Sanakara Innovation Challenge 2026 – Focused on improving operational efficiency in eye hospitals.
+Sankara Innovation Challenge 2026 — improving operational efficiency in eye hospitals.
