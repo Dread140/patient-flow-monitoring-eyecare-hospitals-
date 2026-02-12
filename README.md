@@ -17,7 +17,7 @@ This contributes to long wait times, specialist overload, and inconsistent equip
 This repository now contains a runnable **Node.js + SQLite + dashboard** implementation with:
 
 - Real-time patient queue tracking (status + stage)
-- Digital token-based patient registration
+- Staff login followed by digital token-based patient registration
 - Stage-wise metrics and queue summary
 - Resource monitoring (doctor/equipment status + utilization)
 - Dashboard visualizations using Chart.js
@@ -56,20 +56,28 @@ npm start
 http://localhost:3000
 ```
 
+## 🔐 Demo Login
+
+- Username: `admin`
+- Password: `admin123`
+- To override, set `DEMO_USERNAME` and `DEMO_PASSWORD` environment variables before starting the server.
+
 ## 🔌 API Endpoints
 
 - `GET /api/health` — service health
-- `GET /api/patients` — list patients
-- `POST /api/patients` — create patient `{ name, age, priority }`
-- `PATCH /api/patients/:id` — update patient stage/status
-- `GET /api/resources` — list doctors/equipment
-- `GET /api/metrics` — dashboard metrics
+- `POST /api/login` — login `{ username, password }` and get session token
+- `GET /api/patients` — list patients (requires `x-session-token`)
+- `POST /api/patients` — create patient `{ name, age, priority }` (requires `x-session-token`)
+- `PATCH /api/patients/:id` — update patient stage/status (requires `x-session-token`)
+- `GET /api/resources` — list doctors/equipment (requires `x-session-token`)
+- `GET /api/metrics` — dashboard metrics (requires `x-session-token`)
 
 ## 🧪 Sample Workflow
 
-- Register patients from the dashboard form.
-- See queue counters and stage chart update.
-- Monitor doctor and equipment utilization in real time.
+1. Login with staff credentials (`admin` / `admin123` by default).
+2. Register patients from the dashboard form after login.
+3. See queue counters and stage chart update.
+4. Monitor doctor and equipment utilization in real time.
 
 ## 🔮 Future Scope
 

@@ -6,155 +6,176 @@
     <title>Eye Hospital Patient Flow Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background: #f4f7fb;
-        color: #1c2a39;
-      }
-      header {
-        background: #0d47a1;
-        color: white;
-        padding: 16px 20px;
-      }
-      .grid {
-        display: grid;
-        gap: 16px;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        padding: 20px;
-      }
-      .card {
-        background: white;
-        border-radius: 10px;
-        padding: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      }
-      .metric {
-        font-size: 30px;
-        font-weight: bold;
-        margin-top: 4px;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        text-align: left;
-        border-bottom: 1px solid #e8eef5;
-        padding: 8px;
-      }
-      .row {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-      form {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      input,
-      select,
-      button {
-        padding: 8px;
-        border: 1px solid #ccd5e1;
-        border-radius: 6px;
-      }
-      button {
-        background: #0d47a1;
-        color: white;
-        border: none;
-      }
-      .small {
-        color: #5f7388;
-        font-size: 13px;
-      }
+      body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1c2a39; }
+      header { background: #0d47a1; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+      .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); padding: 20px; }
+      .card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+      .metric { font-size: 30px; font-weight: bold; margin-top: 4px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; border-bottom: 1px solid #e8eef5; padding: 8px; }
+      form { display: flex; gap: 8px; flex-wrap: wrap; }
+      input, select, button { padding: 8px; border: 1px solid #ccd5e1; border-radius: 6px; }
+      button { background: #0d47a1; color: white; border: none; cursor: pointer; }
+      .small { color: #c6d4ea; font-size: 13px; }
+      #authView { min-height: calc(100vh - 85px); display: grid; place-items: center; }
+      .auth-card { width: min(420px, 92vw); }
+      .auth-form { display: grid; gap: 10px; }
+      .auth-form input { width: 100%; box-sizing: border-box; }
+      .notice { margin: 0 20px; }
+      .error { background: #ffebee; color: #b71c1c; border-radius: 8px; padding: 10px; }
+      .success { background: #e8f5e9; color: #1b5e20; border-radius: 8px; padding: 10px; }
+      #dashboardView { display: none; }
+      #logoutBtn { background: #08367d; }
     </style>
   </head>
   <body>
     <header>
-      <h1>👁 Smart Eye Hospital Patient Flow Dashboard</h1>
-      <p class="small">Live queue, stage progression, and resource utilization.</p>
+      <div>
+        <h1>👁 Smart Eye Hospital Patient Flow Dashboard</h1>
+        <p class="small">Login → Register patients → Monitor queue and resources.</p>
+      </div>
+      <button id="logoutBtn" style="display: none">Logout</button>
     </header>
 
-    <section class="grid" id="metrics"></section>
+    <div class="notice" id="notice"></div>
 
-    <section class="grid">
-      <div class="card">
-        <h3>Register New Patient</h3>
-        <form id="patientForm">
-          <input required name="name" placeholder="Patient name" />
-          <input required name="age" min="1" type="number" placeholder="Age" />
-          <select name="priority">
-            <option>Regular</option>
-            <option>Elderly</option>
-            <option>Emergency</option>
-          </select>
-          <button type="submit">Add</button>
+    <section id="authView">
+      <div class="card auth-card">
+        <h3>Staff Login</h3>
+        <p>Sign in to continue to patient registration and monitoring.</p>
+        <form id="loginForm" class="auth-form">
+          <input name="username" required placeholder="Username" />
+          <input name="password" required type="password" placeholder="Password" />
+          <button type="submit">Login</button>
         </form>
-      </div>
-
-      <div class="card">
-        <h3>Stage Distribution</h3>
-        <canvas id="stageChart" height="110"></canvas>
+        <p class="small" style="color:#5f7388">Demo: admin / admin123</p>
       </div>
     </section>
 
-    <section class="grid">
-      <div class="card" style="grid-column: 1 / -1">
-        <h3>Patient Queue</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Name</th>
-              <th>Age</th>
-              <th>Priority</th>
-              <th>Stage</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="patientRows"></tbody>
-        </table>
-      </div>
+    <main id="dashboardView">
+      <section class="grid" id="metrics"></section>
 
-      <div class="card" style="grid-column: 1 / -1">
-        <h3>Resource Monitoring</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Utilization</th>
-            </tr>
-          </thead>
-          <tbody id="resourceRows"></tbody>
-        </table>
-      </div>
-    </section>
+      <section class="grid">
+        <div class="card">
+          <h3>Register New Patient</h3>
+          <form id="patientForm">
+            <input required name="name" placeholder="Patient name" />
+            <input required name="age" min="1" type="number" placeholder="Age" />
+            <select name="priority">
+              <option>Regular</option>
+              <option>Elderly</option>
+              <option>Emergency</option>
+            </select>
+            <button type="submit">Add</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Stage Distribution</h3>
+          <canvas id="stageChart" height="110"></canvas>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card" style="grid-column: 1 / -1">
+          <h3>Patient Queue</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Priority</th>
+                <th>Stage</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="patientRows"></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1">
+          <h3>Resource Monitoring</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Utilization</th>
+              </tr>
+            </thead>
+            <tbody id="resourceRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
 
     <script>
       const metricsElement = document.getElementById('metrics');
       const patientRows = document.getElementById('patientRows');
       const resourceRows = document.getElementById('resourceRows');
+      const authView = document.getElementById('authView');
+      const dashboardView = document.getElementById('dashboardView');
+      const notice = document.getElementById('notice');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const loginForm = document.getElementById('loginForm');
       let stageChart;
+      let refreshTimer;
+
+      function getToken() {
+        return localStorage.getItem('sessionToken');
+      }
+
+      function showNotice(message, type = 'error') {
+        notice.innerHTML = `<div class="${type}">${message}</div>`;
+        setTimeout(() => {
+          notice.innerHTML = '';
+        }, 3000);
+      }
 
       function metricCard(label, value) {
         return `<div class="card"><div>${label}</div><div class="metric">${value}</div></div>`;
       }
 
-      async function loadDashboard() {
-        const [patientsRes, resourcesRes, metricsRes] = await Promise.all([
-          fetch('/api/patients'),
-          fetch('/api/resources'),
-          fetch('/api/metrics')
-        ]);
+      async function apiRequest(url, options = {}) {
+        const token = getToken();
+        const headers = { ...(options.headers || {}) };
+        if (token) headers['x-session-token'] = token;
 
-        const patients = await patientsRes.json();
-        const resources = await resourcesRes.json();
-        const metrics = await metricsRes.json();
+        const response = await fetch(url, { ...options, headers });
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            logout();
+          }
+          throw new Error(data.error || 'Request failed');
+        }
+
+        return data;
+      }
+
+      function showDashboard() {
+        authView.style.display = 'none';
+        dashboardView.style.display = 'block';
+        logoutBtn.style.display = 'inline-block';
+      }
+
+      function logout() {
+        localStorage.removeItem('sessionToken');
+        dashboardView.style.display = 'none';
+        authView.style.display = 'grid';
+        logoutBtn.style.display = 'none';
+        if (refreshTimer) clearInterval(refreshTimer);
+      }
+
+      async function loadDashboard() {
+        const [patients, resources, metrics] = await Promise.all([
+          apiRequest('/api/patients'),
+          apiRequest('/api/resources'),
+          apiRequest('/api/metrics')
+        ]);
 
         metricsElement.innerHTML = [
           metricCard('Waiting', metrics.queue.waiting),
@@ -194,46 +215,63 @@
         if (stageChart) stageChart.destroy();
         stageChart = new Chart(document.getElementById('stageChart'), {
           type: 'bar',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: 'Patients',
-                data,
-                backgroundColor: '#42a5f5'
-              }
-            ]
-          },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { precision: 0 }
-              }
-            }
-          }
+          data: { labels, datasets: [{ label: 'Patients', data, backgroundColor: '#42a5f5' }] },
+          options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
         });
       }
 
-      document.getElementById('patientForm').addEventListener('submit', async (event) => {
+      loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const formData = new FormData(event.target);
-        const payload = Object.fromEntries(formData.entries());
+        try {
+          const payload = Object.fromEntries(new FormData(event.target).entries());
+          const response = await apiRequest('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
 
-        const response = await fetch('/api/patients', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
+          localStorage.setItem('sessionToken', response.token);
+          showDashboard();
+          showNotice(`Welcome, ${response.username}`, 'success');
+          await loadDashboard();
+          refreshTimer = setInterval(loadDashboard, 15000);
           event.target.reset();
-          loadDashboard();
+        } catch (error) {
+          showNotice(error.message, 'error');
         }
       });
 
-      loadDashboard();
-      setInterval(loadDashboard, 15000);
+      document.getElementById('patientForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const payload = Object.fromEntries(new FormData(event.target).entries());
+          await apiRequest('/api/patients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          event.target.reset();
+          showNotice('Patient registered successfully.', 'success');
+          await loadDashboard();
+        } catch (error) {
+          showNotice(error.message, 'error');
+        }
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        logout();
+        showNotice('You have been logged out.', 'success');
+      });
+
+      if (getToken()) {
+        showDashboard();
+        loadDashboard().catch((error) => {
+          showNotice(error.message, 'error');
+          logout();
+        });
+        refreshTimer = setInterval(loadDashboard, 15000);
+      }
     </script>
   </body>
 </html>
