@@ -150,6 +150,178 @@ Backend Developer – Data Logic & Analytics Engine
 - Doctor mobile app
 - Automated appointment optimization
 
+flow of the app
+1. Login Page
+
+Purpose:
+Authenticate staff (admin, receptionist, optometrist, doctor).
+
+Functions:
+
+Accept username/password
+
+Role-based navigation (admin vs staff vs doctors)
+
+Navigation:
+→ Dashboard
+
+📌 2. Hospital Dashboard
+
+Purpose:
+Central overview of hospital status.
+
+Shows:
+
+Total patients in hospital
+
+Patients waiting per stage
+
+Emergency cases flagged
+
+Doctor / room availability
+
+Alerts for crowding or bottlenecks
+
+Functions:
+
+Real-time counts
+
+Links to sub-pages
+
+Hospital operational summary
+
+Navigation Options:
+→ Patient Registration
+→ Pre-check Queues
+→ Diagnostics
+→ Consultation List
+
+📌 3. Patient Registration Page
+
+Purpose:
+Record patient details and generate identity (MRN).
+
+Functions:
+
+Collect basic patient info (name, age, contact)
+
+Issue unique patient ID
+
+Tag visit type (OPD, follow-up, emergency)
+
+Assign token number displayed on TV
+
+Mark patient as “Registered”
+
+Navigation:
+→ Pre-Check
+
+📌 4. Pre-Check / Screening Page
+
+Purpose:
+Perform initial eye screening before doctor exam.
+
+Typical Tests:
+
+Vision check (refraction)
+
+Eye pressure
+
+Basic examination
+
+Functions:
+
+Mark tests done
+
+Update patient status to “Pre-check done”
+
+Route patient accordingly
+
+Navigation:
+→ Diagnostics (if needed)
+→ Consultation
+
+📌 5. Diagnostics Page
+
+Purpose:
+Handle specialized tests often required in eye care:
+
+OCT scans
+
+Fundus imaging
+
+Cornea checks
+
+Lab tests
+
+Functions:
+
+Queue patients for specific tests
+
+Show room/diagnostic device availability
+
+Update test results when done
+
+Navigation:
+→ Consultation
+
+📌 6. Doctor Consultation Page
+
+Purpose:
+Ophthalmologist reviews patient and clinical data.
+
+Functions:
+
+Show patient history & test results
+
+Add diagnosis and treatment plan
+
+Mark patient as “Consulted”
+
+Route to next step (treatment/surgery/pharmacy)
+
+Navigation:
+→ Treatment / Pharmacy / Counselling
+
+📌 7. Treatment / Surgery / Pharmacy Page
+
+Purpose:
+Handle final stages after consultation.
+
+Treatment Types:
+
+Medication prescription
+
+Surgical appointment
+
+Optical prescription
+
+Pharmacy pickup
+
+Functions:
+
+Schedule or mark treatment done
+
+Show available OTP / OR slots
+
+Direct to pharmacy (for medication)
+
+Navigation:
+→ Follow-up or Exit
+
+📌 8. Follow-Up / Exit Page
+
+Purpose:
+Finalize visit and schedule next appointment if needed.
+
+Functions:
+
+Capture follow-up date
+
+Save electronic medical record
+
+Provide visit summary
+
 
 ## 🎯 Final Goal
 
