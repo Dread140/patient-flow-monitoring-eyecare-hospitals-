@@ -16,6 +16,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DEMO_USERNAME = process.env.DEMO_USERNAME || 'admin';
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'admin123';
+const priorities = ['Regular', 'Elderly', 'Emergency'];
 const activeSessions = new Map();
 
 app.use(express.json());
@@ -23,12 +24,22 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
+function normalizeName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+function parseAge(value) {
+  const age = Number(value);
+  return Number.isInteger(age) && age > 0 && age <= 120 ? age : null;
+}
+
 function requireAuth(req, res, next) {
   const token = req.header('x-session-token');
   if (!token || !activeSessions.has(token)) {
     return res.status(401).json({ error: 'Unauthorized. Please login first.' });
   }
   req.user = activeSessions.get(token);
+  req.sessionToken = token;
   return next();
 }
 
@@ -53,24 +64,44 @@ app.post('/api/login', (req, res) => {
   return res.json({ token, username });
 });
 
+app.post('/api/logout', requireAuth, (req, res) => {
+  activeSessions.delete(req.sessionToken);
+  res.json({ ok: true });
+});
+
+app.get('/api/me', requireAuth, (req, res) => {
+  res.json({ username: req.user.username });
+});
+
 app.get('/api/patients', requireAuth, asyncHandler(async (req, res) => {
   const patients = await listPatients();
   res.json(patients);
 }));
 
 app.post('/api/patients', requireAuth, asyncHandler(async (req, res) => {
-  const { name, age, priority = 'Regular' } = req.body || {};
+  const name = normalizeName(req.body?.name);
+  const age = parseAge(req.body?.age);
+  const priority = req.body?.priority || 'Regular';
+
   if (!name || !age) {
-    return res.status(400).json({ error: 'name and age are required' });
+    return res.status(400).json({ error: 'valid name and age are required' });
   }
 
-  const patient = await addPatient({ name, age: Number(age), priority });
+  if (!priorities.includes(priority)) {
+    return res.status(400).json({ error: `priority must be one of ${priorities.join(', ')}` });
+  }
+
+  const patient = await addPatient({ name, age, priority });
   return res.status(201).json(patient);
 }));
 
 app.patch('/api/patients/:id', requireAuth, asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   const { stage, status } = req.body || {};
+
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: 'patient id must be a positive integer' });
+  }
 
   if (!stages.includes(stage) || !statuses.includes(status)) {
     return res
@@ -98,8 +129,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-initDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to initialize database', error);
+    process.exit(1);
   });
-});

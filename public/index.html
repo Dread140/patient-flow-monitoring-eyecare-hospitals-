@@ -8,33 +8,38 @@
     <style>
       body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1c2a39; }
       header { background: #0d47a1; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
-      .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); padding: 20px; }
+      .small { color: #c6d4ea; font-size: 13px; }
       .card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
-      .metric { font-size: 30px; font-weight: bold; margin-top: 4px; }
+      .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); padding: 20px; }
       table { width: 100%; border-collapse: collapse; }
       th, td { text-align: left; border-bottom: 1px solid #e8eef5; padding: 8px; }
       form { display: flex; gap: 8px; flex-wrap: wrap; }
       input, select, button { padding: 8px; border: 1px solid #ccd5e1; border-radius: 6px; }
       button { background: #0d47a1; color: white; border: none; cursor: pointer; }
-      .small { color: #c6d4ea; font-size: 13px; }
+      .notice { margin: 14px 20px 0; }
+      .error { background: #ffebee; color: #b71c1c; border-radius: 8px; padding: 10px; }
+      .success { background: #e8f5e9; color: #1b5e20; border-radius: 8px; padding: 10px; }
+      .metric { font-size: 30px; font-weight: bold; margin-top: 4px; }
       #authView { min-height: calc(100vh - 85px); display: grid; place-items: center; }
       .auth-card { width: min(420px, 92vw); }
       .auth-form { display: grid; gap: 10px; }
       .auth-form input { width: 100%; box-sizing: border-box; }
-      .notice { margin: 0 20px; }
-      .error { background: #ffebee; color: #b71c1c; border-radius: 8px; padding: 10px; }
-      .success { background: #e8f5e9; color: #1b5e20; border-radius: 8px; padding: 10px; }
       #dashboardView { display: none; }
-      #logoutBtn { background: #08367d; }
+      #logoutBtn { background: #08367d; display: none; }
+      .tabs { padding: 0 20px 10px; display: none; gap: 10px; }
+      .tab-btn { background: #dbe8ff; color: #0d47a1; }
+      .tab-btn.active { background: #0d47a1; color: white; }
+      .panel { display: none; }
+      .panel.active { display: block; }
     </style>
   </head>
   <body>
     <header>
       <div>
         <h1>👁 Smart Eye Hospital Patient Flow Dashboard</h1>
-        <p class="small">Login → Register patients → Monitor queue and resources.</p>
+        <p class="small">Flow: Login → Patient Registration → Monitoring Dashboard</p>
       </div>
-      <button id="logoutBtn" style="display: none">Logout</button>
+      <button id="logoutBtn">Logout</button>
     </header>
 
     <div class="notice" id="notice"></div>
@@ -42,7 +47,7 @@
     <section id="authView">
       <div class="card auth-card">
         <h3>Staff Login</h3>
-        <p>Sign in to continue to patient registration and monitoring.</p>
+        <p>Login first. After login, you will be taken to patient registration.</p>
         <form id="loginForm" class="auth-form">
           <input name="username" required placeholder="Username" />
           <input name="password" required type="password" placeholder="Password" />
@@ -53,73 +58,87 @@
     </section>
 
     <main id="dashboardView">
-      <section class="grid" id="metrics"></section>
+      <section class="tabs" id="tabs">
+        <button class="tab-btn" data-tab="registrationPanel">Registration</button>
+        <button class="tab-btn" data-tab="monitoringPanel">Monitoring</button>
+      </section>
 
-      <section class="grid">
-        <div class="card">
-          <h3>Register New Patient</h3>
-          <form id="patientForm">
-            <input required name="name" placeholder="Patient name" />
-            <input required name="age" min="1" type="number" placeholder="Age" />
-            <select name="priority">
-              <option>Regular</option>
-              <option>Elderly</option>
-              <option>Emergency</option>
-            </select>
-            <button type="submit">Add</button>
-          </form>
-        </div>
+      <section class="panel" id="registrationPanel">
+        <div class="grid">
+          <div class="card" style="grid-column: 1 / -1">
+            <h3>Register New Patient</h3>
+            <form id="patientForm">
+              <input required maxlength="80" name="name" placeholder="Patient name" />
+              <input required name="age" min="1" max="120" type="number" placeholder="Age" />
+              <select name="priority">
+                <option>Regular</option>
+                <option>Elderly</option>
+                <option>Emergency</option>
+              </select>
+              <button type="submit">Register Patient</button>
+            </form>
+          </div>
 
-        <div class="card">
-          <h3>Stage Distribution</h3>
-          <canvas id="stageChart" height="110"></canvas>
+          <div class="card" style="grid-column: 1 / -1">
+            <h3>Recently Registered Patients</h3>
+            <table>
+              <thead>
+                <tr><th>Token</th><th>Name</th><th>Age</th><th>Priority</th><th>Stage</th><th>Status</th></tr>
+              </thead>
+              <tbody id="recentPatientRows"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      <section class="grid">
-        <div class="card" style="grid-column: 1 / -1">
-          <h3>Patient Queue</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Priority</th>
-                <th>Stage</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="patientRows"></tbody>
-          </table>
-        </div>
+      <section class="panel" id="monitoringPanel">
+        <section class="grid" id="metrics"></section>
 
-        <div class="card" style="grid-column: 1 / -1">
-          <h3>Resource Monitoring</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Utilization</th>
-              </tr>
-            </thead>
-            <tbody id="resourceRows"></tbody>
-          </table>
-        </div>
+        <section class="grid">
+          <div class="card">
+            <h3>Stage Distribution</h3>
+            <canvas id="stageChart" height="110"></canvas>
+          </div>
+
+          <div class="card">
+            <h3>Resource Monitoring</h3>
+            <table>
+              <thead>
+                <tr><th>Type</th><th>Name</th><th>Status</th><th>Utilization</th></tr>
+              </thead>
+              <tbody id="resourceRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="grid">
+          <div class="card" style="grid-column: 1 / -1">
+            <h3>Patient Queue</h3>
+            <table>
+              <thead>
+                <tr><th>Token</th><th>Name</th><th>Age</th><th>Priority</th><th>Stage</th><th>Status</th></tr>
+              </thead>
+              <tbody id="patientRows"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
 
     <script>
-      const metricsElement = document.getElementById('metrics');
-      const patientRows = document.getElementById('patientRows');
-      const resourceRows = document.getElementById('resourceRows');
       const authView = document.getElementById('authView');
       const dashboardView = document.getElementById('dashboardView');
-      const notice = document.getElementById('notice');
       const logoutBtn = document.getElementById('logoutBtn');
+      const notice = document.getElementById('notice');
       const loginForm = document.getElementById('loginForm');
+      const tabs = document.getElementById('tabs');
+      const panelRegistration = document.getElementById('registrationPanel');
+      const panelMonitoring = document.getElementById('monitoringPanel');
+      const metricsElement = document.getElementById('metrics');
+      const patientRows = document.getElementById('patientRows');
+      const recentPatientRows = document.getElementById('recentPatientRows');
+      const resourceRows = document.getElementById('resourceRows');
+
       let stageChart;
       let refreshTimer;
 
@@ -138,36 +157,52 @@
         return `<div class="card"><div>${label}</div><div class="metric">${value}</div></div>`;
       }
 
+      function activateTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach((button) => {
+          button.classList.toggle('active', button.dataset.tab === tabId);
+        });
+        panelRegistration.classList.toggle('active', tabId === 'registrationPanel');
+        panelMonitoring.classList.toggle('active', tabId === 'monitoringPanel');
+      }
+
       async function apiRequest(url, options = {}) {
-        const token = getToken();
         const headers = { ...(options.headers || {}) };
+        const token = getToken();
         if (token) headers['x-session-token'] = token;
 
         const response = await fetch(url, { ...options, headers });
         const data = await response.json();
 
         if (!response.ok) {
-          if (response.status === 401) {
-            logout();
-          }
+          if (response.status === 401) logout(false);
           throw new Error(data.error || 'Request failed');
         }
-
         return data;
+      }
+
+      async function logout(showMessage = true) {
+        try {
+          if (getToken()) {
+            await apiRequest('/api/logout', { method: 'POST' });
+          }
+        } catch (error) {
+          // ignore logout API errors
+        }
+
+        localStorage.removeItem('sessionToken');
+        authView.style.display = 'grid';
+        dashboardView.style.display = 'none';
+        tabs.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        if (refreshTimer) clearInterval(refreshTimer);
+        if (showMessage) showNotice('You have been logged out.', 'success');
       }
 
       function showDashboard() {
         authView.style.display = 'none';
         dashboardView.style.display = 'block';
+        tabs.style.display = 'flex';
         logoutBtn.style.display = 'inline-block';
-      }
-
-      function logout() {
-        localStorage.removeItem('sessionToken');
-        dashboardView.style.display = 'none';
-        authView.style.display = 'grid';
-        logoutBtn.style.display = 'none';
-        if (refreshTimer) clearInterval(refreshTimer);
       }
 
       async function loadDashboard() {
@@ -185,33 +220,38 @@
           metricCard('Avg Resource Utilization', `${metrics.avgUtilization}%`)
         ].join('');
 
-        patientRows.innerHTML = patients
-          .map(
-            (patient) => `<tr>
-          <td>${patient.token}</td>
-          <td>${patient.name}</td>
-          <td>${patient.age}</td>
-          <td>${patient.priority}</td>
-          <td>${patient.stage}</td>
-          <td>${patient.status}</td>
-        </tr>`
-          )
+        const rows = patients
+          .map((patient) => `<tr>
+            <td>${patient.token}</td>
+            <td>${patient.name}</td>
+            <td>${patient.age}</td>
+            <td>${patient.priority}</td>
+            <td>${patient.stage}</td>
+            <td>${patient.status}</td>
+          </tr>`)
           .join('');
 
+        patientRows.innerHTML = rows;
+        recentPatientRows.innerHTML = patients.slice(-8).reverse().map((patient) => `<tr>
+            <td>${patient.token}</td>
+            <td>${patient.name}</td>
+            <td>${patient.age}</td>
+            <td>${patient.priority}</td>
+            <td>${patient.stage}</td>
+            <td>${patient.status}</td>
+          </tr>`).join('');
+
         resourceRows.innerHTML = resources
-          .map(
-            (resource) => `<tr>
+          .map((resource) => `<tr>
             <td>${resource.type}</td>
             <td>${resource.name}</td>
             <td>${resource.status}</td>
             <td>${resource.utilization}%</td>
-          </tr>`
-          )
+          </tr>`)
           .join('');
 
         const labels = metrics.byStage.map((x) => x.stage);
         const data = metrics.byStage.map((x) => x.count);
-
         if (stageChart) stageChart.destroy();
         stageChart = new Chart(document.getElementById('stageChart'), {
           type: 'bar',
@@ -219,6 +259,10 @@
           options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
         });
       }
+
+      document.querySelectorAll('.tab-btn').forEach((button) => {
+        button.addEventListener('click', () => activateTab(button.dataset.tab));
+      });
 
       loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -232,7 +276,8 @@
 
           localStorage.setItem('sessionToken', response.token);
           showDashboard();
-          showNotice(`Welcome, ${response.username}`, 'success');
+          activateTab('registrationPanel');
+          showNotice(`Welcome ${response.username}. Continue with patient registration.`, 'success');
           await loadDashboard();
           refreshTimer = setInterval(loadDashboard, 15000);
           event.target.reset();
@@ -260,15 +305,15 @@
       });
 
       logoutBtn.addEventListener('click', () => {
-        logout();
-        showNotice('You have been logged out.', 'success');
+        logout(true);
       });
 
       if (getToken()) {
         showDashboard();
+        activateTab('registrationPanel');
         loadDashboard().catch((error) => {
           showNotice(error.message, 'error');
-          logout();
+          logout(false);
         });
         refreshTimer = setInterval(loadDashboard, 15000);
       }

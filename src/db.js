@@ -1,7 +1,9 @@
 const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
 const dbPath = path.join(__dirname, '..', 'data', 'patient-flow.db');
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new sqlite3.Database(dbPath);
 
 const stages = ['Vision Test', 'Imaging', 'Consultation', 'Treatment', 'Completed'];

@@ -8,17 +8,23 @@ Eye hospitals often face high OPD volumes and bottlenecks across multiple stages
 
 - Vision Test → Imaging → Consultation → Treatment
 - Limited ophthalmologists and diagnostic equipment (OCT, Fundus Camera, Slit Lamp)
-- No real-time visibility for queue and resource management
+- No centralized visibility for queue and resource management
 
 This contributes to long wait times, specialist overload, and inconsistent equipment usage.
 
+## ✅ Implemented Flow (as requested)
+
+This app now follows the exact flow:
+
+1. **Staff Login**
+2. **Patient Registration (shown immediately after login)**
+3. **Monitoring Dashboard** (queue, stage chart, resources)
+
 ## 💡 What this prototype includes
 
-This repository now contains a runnable **Node.js + SQLite + dashboard** implementation with:
-
-- Real-time patient queue tracking (status + stage)
-- Staff login followed by digital token-based patient registration
-- Stage-wise metrics and queue summary
+- Login-gated access using session token (`x-session-token`)
+- Digital token-based patient registration (after login)
+- Queue and stage metrics
 - Resource monitoring (doctor/equipment status + utilization)
 - Dashboard visualizations using Chart.js
 
@@ -31,9 +37,9 @@ This repository now contains a runnable **Node.js + SQLite + dashboard** impleme
 
 ## 📁 Project Structure
 
-- `src/server.js` — Express server and REST API
+- `src/server.js` — Express server + auth + REST APIs
 - `src/db.js` — SQLite schema, seed data, and data access
-- `public/index.html` — live dashboard UI
+- `public/index.html` — login/registration/monitoring UI
 - `data/patient-flow.db` — SQLite DB file (created at runtime)
 
 ## 🚀 Run Locally
@@ -44,7 +50,7 @@ This repository now contains a runnable **Node.js + SQLite + dashboard** impleme
 npm install
 ```
 
-2. Start the server:
+2. Start server:
 
 ```bash
 npm start
@@ -60,32 +66,28 @@ http://localhost:3000
 
 - Username: `admin`
 - Password: `admin123`
-- To override, set `DEMO_USERNAME` and `DEMO_PASSWORD` environment variables before starting the server.
+- Override with env vars:
+  - `DEMO_USERNAME`
+  - `DEMO_PASSWORD`
 
 ## 🔌 API Endpoints
 
 - `GET /api/health` — service health
-- `POST /api/login` — login `{ username, password }` and get session token
-- `GET /api/patients` — list patients (requires `x-session-token`)
-- `POST /api/patients` — create patient `{ name, age, priority }` (requires `x-session-token`)
-- `PATCH /api/patients/:id` — update patient stage/status (requires `x-session-token`)
-- `GET /api/resources` — list doctors/equipment (requires `x-session-token`)
-- `GET /api/metrics` — dashboard metrics (requires `x-session-token`)
+- `POST /api/login` — login `{ username, password }` and get token
+- `POST /api/logout` — logout current token
+- `GET /api/me` — current session user
+- `GET /api/patients` — list patients (auth required)
+- `POST /api/patients` — create patient `{ name, age, priority }` (auth required)
+- `PATCH /api/patients/:id` — update patient stage/status (auth required)
+- `GET /api/resources` — list doctors/equipment (auth required)
+- `GET /api/metrics` — dashboard metrics (auth required)
 
-## 🧪 Sample Workflow
+## 🧪 Sample User Journey
 
-1. Login with staff credentials (`admin` / `admin123` by default).
-2. Register patients from the dashboard form after login.
-3. See queue counters and stage chart update.
-4. Monitor doctor and equipment utilization in real time.
-
-## 🔮 Future Scope
-
-- AI-based bottleneck prediction
-- Multi-branch monitoring
-- HIS integration
-- Doctor mobile app
-- Automated appointment optimization
+1. Login with staff credentials.
+2. Land on the **Registration** tab directly.
+3. Register one or more patients.
+4. Open **Monitoring** tab to track queue metrics and resources.
 
 ## 📌 Hackathon Focus
 
